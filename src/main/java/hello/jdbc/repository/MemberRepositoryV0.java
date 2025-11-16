@@ -1,0 +1,65 @@
+package hello.jdbc.repository;
+
+import hello.jdbc.connction.DBConnectionUtil;
+import hello.jdbc.domain.Member;
+import lombok.extern.slf4j.Slf4j;
+
+import java.sql.*;
+
+/**
+ * JDBC - DriverManager 사용
+ */
+@Slf4j
+public class MemberRepositoryV0 {
+
+    public Member save(Member member) throws SQLException {
+        String sql = "INSERT INTO member(member_id, money) VALUES (?, ?)";
+
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, member.getMemberId());
+            pstmt.setInt(2, member.getMoney());
+            pstmt.executeUpdate();
+            return member;
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        } finally {
+            close(con, pstmt, null);
+        }
+    }
+
+    private void close (Connection con, Statement stmt, ResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                log.error("ResultSet close 중 에러 발생", e); // 에러로그 찍는 것 말고는 할 수 있는게 없음
+            }
+        }
+
+        if (con != null) {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                log.error("Connection close 중 에러 발생", e); // 에러로그 찍는 것 말고는 할 수 있는게 없음
+            }
+        }
+
+        if (stmt != null) {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.error("Statement close 중 에러 발생", e); // 에러로그 찍는 것 말고는 할 수 있는게 없음
+            }
+        }
+    }
+
+    private static Connection getConnection() {
+        return DBConnectionUtil.getConnection();
+    }
+}
